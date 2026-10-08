@@ -43,7 +43,8 @@ Natural frequencies of a bridge shift with temperature and humidity even when no
 
 **v3**
 - `logger4.py`: continuous field logger (ADXL355 at 500 Hz, ±2 g, DHT22, DS18B20 surface temperature, ADXL internal temperature).
-- `sentry.py`: on-site node monitor dashboard (vibration RMS, peak, tilt change with calibration and vote-based alarm).
+- `logger.py`: long-run version of the field logger. Splits the CSV every hour (`--rotate-seconds`), writes on a separate thread with periodic fsync, keeps a `current.json` manifest for the dashboard, never overwrites existing files, and writes a QC summary (missed slots, read errors, clipping) on exit.
+- `sentry.py`: on-site node monitor dashboard (vibration RMS, peak, tilt change with calibration and vote-based alarm). In live mode it launches `logger.py` itself.
 
 ## Running
 
@@ -70,11 +71,11 @@ python sentry.py run --logger logger3.py --condition T0-H0-M0-B0
 # v3: field logging on the Pi (30 min)
 cd v3
 python logger4.py --condition B31-SCR-A --duration-s 1800
-# node monitor on a recording made by logger4.py
+# hourly-rotating logger + node monitor dashboard (live)
+python sentry.py
+# node monitor on an existing recording
 python sentry.py --bridge data/B31-SCR-A_bridge_log.csv
 ```
-
-Note: `v3/sentry.py` in live mode (no `--bridge`) launches a newer rotating logger (`--run-dir`, `--rotate-seconds`) that is not included here; use `--bridge` / `--manifest` with existing recordings.
 
 Raw experiment data is not included in this repository.
 
